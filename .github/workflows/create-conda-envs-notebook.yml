@@ -85,3 +85,61 @@ jobs:
           path: notebook-python-frozen.yaml
           if-no-files-found: error
           retention-days: 14
+  r:
+    runs-on: ubuntu-latest
+    container:
+      image: jupyter/minimal-notebook:lab-3.4.5
+    steps:
+      - name: Remove pinned dependencies from local installation
+        run: rm -f "${CONDA_DIR}/conda-meta/pinned"
+      - name: Create conda environment
+        run: |
+          mamba create -y -n r-tiledb -c conda-forge -c tiledb/label/for-cloud -c tiledb \
+            cmake \
+            cxx-compiler \
+            r-base==4.2.* \
+            r-irkernel \
+            r-tidyverse \
+            'r-stringi>=1.7.12' \
+            r-shiny \
+            r-shinybg==0.1.6 \
+            r-shinyjs \
+            r-shinycssloaders \
+            r-shinydashboard \
+            r-shinyfeedback \
+            r-shinylogs \
+            r-plotly \
+            r-bslib \
+            r-sass \
+            r-htmlwidgets \
+            r-arrow \
+            r-remotes \
+            r-xml \
+            r-dplyr \
+            r-purrr \
+            r-jsonlite \
+            r-glue \
+            r-readr \
+            r-crul \
+            r-dt \
+            r-bslib \
+            r-randomcolor \
+            r-biocmanager \
+            r-reticulate \
+            r-ini \
+            r-desc \
+            r-markdown \
+            r-pkgload \
+            r-whisker \
+            r-sever \
+            r-config \
+            git-lfs
+      - name: Export frozen conda environment
+        run: conda list -n r-tiledb --export --explicit --md5 > notebook-r-frozen.yaml
+      - name: Upload frozen conda environment as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: notebook-r-frozen
+          path: notebook-r-frozen.yaml
+          if-no-files-found: error
+          retention-days: 14
