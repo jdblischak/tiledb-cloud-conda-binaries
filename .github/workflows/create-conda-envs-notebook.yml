@@ -1,0 +1,90 @@
+name: Create conda environment for notebook python kernel
+on:
+  push:
+    paths:
+      - '.github/workflows/create-conda-envs-notebook.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/create-conda-envs-notebook.yml'
+  workflow_dispatch:
+defaults:
+  run:
+    shell: bash
+jobs:
+  notebook:
+    runs-on: ubuntu-latest
+    container:
+      image: jupyter/minimal-notebook:lab-3.4.5
+    steps:
+      - name: Remove pinned dependencies from local installation
+        run: rm -f "${CONDA_DIR}/conda-meta/pinned"
+      - name: Install conda packages
+        run: |
+          mamba install -y -c tiledb/label/for-cloud -c tiledb -c fastai -c pyviz -c bokeh -c conda-forge \
+            python==3.9.* \
+            cudatoolkit=11.4 \
+            cudatoolkit-dev==11.4 \
+            numpy==1.23.* \
+            setuptools \
+            s3contents \
+            nbgitpuller \
+            bash_kernel \
+            jq \
+            awscli \
+            vim \
+            plotly \
+            ipywidgets \
+            ipympl \
+            yarn \
+            graphviz \
+            pydot \
+            'pandas<2' \
+            pyarrow \
+            numba \
+            jinja2==3.0.* \
+            voila==0.3.4 \
+            voila-gridstack \
+            jupyter-server-proxy \
+            opencv-python-headless \
+            pytables \
+            tree \
+            scikit-learn==1.* \
+            scikit-misc \
+            snowflake-connector-python \
+            itables \
+            flask \
+            flask_cors \
+            jupyter_bokeh==3.0.3 \
+            jupyter-panel-proxy \
+            ipywidgets_bokeh \
+            faiss-cpu \
+            hnswlib \
+            bqplot \
+            ipyvuetify \
+            scikit-image \
+            langchain \
+            huggingface_hub \
+            openai \
+            tiktoken \
+            python-dotenv \
+            sentence-transformers \
+            'fsspec>2022' \
+            git-lfs \
+            torchvision \
+            pytorch==1.12.* \
+            pytorch_geometric \
+            torchdata==0.4.1 \
+            tensorflow-datasets \
+            keras-applications \
+            tensorflow==2.11.* \
+            # Cloudpickle v3 is incompatible with v2 on the server.
+            "cloudpickle<3" \
+      - name: Export frozen conda environment
+        run: conda list --export --explicit --md5 > notebook.frozen.yaml
+      - name: Upload frozen conda environment as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: notebook
+          path: notebook.frozen.yaml
+          if-no-files-found: error
+          retention-days: 14
