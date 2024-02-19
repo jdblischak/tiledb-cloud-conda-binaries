@@ -28,6 +28,7 @@ jobs:
           apt-get --yes install libxml2-dev
       - name: Install conda packages
         run: |
+          mamba clean --yes --all
           mamba install -y -c tiledb/label/for-cloud -c tiledb -c fastai -c pyviz -c bokeh -c conda-forge \
             python==3.9.* \
             cudatoolkit=${CONDA_OVERRIDE_CUDA} \
