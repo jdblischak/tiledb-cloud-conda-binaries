@@ -1,4 +1,4 @@
-name: Create conda environment for notebook python kernel
+name: Create conda environment for notebook R kernel
 on:
   push:
     paths:
@@ -64,11 +64,11 @@ jobs:
         run: |
           pwd
           echo $HOME
-          conda list -n r-tiledb --explicit --md5 > ~/notebook-r-frozen.yaml
+          conda list -n r-tiledb --explicit --md5 > /opt/conda/notebook-r-frozen.yaml
       - name: Upload frozen conda environment as artifact
         uses: actions/upload-artifact@v4
         with:
           name: notebook-r-frozen
-          path: ~/notebook-r-frozen.yaml
+          path: /opt/conda/notebook-r-frozen.yaml
           if-no-files-found: error
           retention-days: 14
