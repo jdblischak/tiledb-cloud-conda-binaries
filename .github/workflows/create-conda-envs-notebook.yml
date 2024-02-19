@@ -11,7 +11,7 @@ defaults:
   run:
     shell: bash
 jobs:
-  notebook:
+  python:
     runs-on: ubuntu-latest
     container:
       image: jupyter/minimal-notebook:lab-3.4.5
@@ -22,8 +22,6 @@ jobs:
         run: |
           mamba install -y -c tiledb/label/for-cloud -c tiledb -c fastai -c pyviz -c bokeh -c conda-forge \
             python==3.9.* \
-            cudatoolkit=11.4 \
-            cudatoolkit-dev==11.4 \
             numpy==1.23.* \
             setuptools \
             s3contents \
@@ -77,14 +75,13 @@ jobs:
             tensorflow-datasets \
             keras-applications \
             tensorflow==2.11.* \
-            # Cloudpickle v3 is incompatible with v2 on the server.
-            "cloudpickle<3" \
+            'cloudpickle<3'
       - name: Export frozen conda environment
-        run: conda list --export --explicit --md5 > notebook.frozen.yaml
+        run: conda list --export --explicit --md5 > notebook-python-frozen.yaml
       - name: Upload frozen conda environment as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: notebook
-          path: notebook.frozen.yaml
+          name: notebook-python-frozen
+          path: notebook-python-frozen.yaml
           if-no-files-found: error
           retention-days: 14
