@@ -1,4 +1,4 @@
-name: Create conda environment for notebook python kernel
+name: Create conda environment for notebook Python kernel
 on:
   push:
     paths:
@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: jupyter/minimal-notebook:lab-3.4.5
+      options: --user root
     steps:
       - name: Remove pinned dependencies from local installation
         run: rm -f "${CONDA_DIR}/conda-meta/pinned"
@@ -77,11 +78,11 @@ jobs:
             tensorflow==2.11.* \
             'cloudpickle<3'
       - name: Export frozen conda environment
-        run: conda list --explicit --md5 > ~/notebook-python-frozen.yaml
+        run: conda list --explicit --md5 > notebook-python-frozen.yaml
       - name: Upload frozen conda environment as artifact
         uses: actions/upload-artifact@v4
         with:
           name: notebook-python-frozen
-          path: ~/notebook-python-frozen.yaml
+          path: notebook-python-frozen.yaml
           if-no-files-found: error
           retention-days: 14

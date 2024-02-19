@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: jupyter/minimal-notebook:lab-3.4.5
+      options: --user root
     steps:
       - name: Remove pinned dependencies from local installation
         run: rm -f "${CONDA_DIR}/conda-meta/pinned"
@@ -61,14 +62,11 @@ jobs:
             r-config \
             git-lfs
       - name: Export frozen conda environment
-        run: |
-          pwd
-          echo $HOME
-          conda list -n r-tiledb --explicit --md5 > /opt/conda/notebook-r-frozen.yaml
+        run: conda list -n r-tiledb --explicit --md5 > notebook-r-frozen.yaml
       - name: Upload frozen conda environment as artifact
         uses: actions/upload-artifact@v4
         with:
           name: notebook-r-frozen
-          path: /opt/conda/notebook-r-frozen.yaml
+          path: notebook-r-frozen.yaml
           if-no-files-found: error
           retention-days: 14
