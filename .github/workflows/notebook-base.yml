@@ -7,23 +7,22 @@ on:
     paths:
       - '.github/workflows/notebook-base.yml'
   workflow_dispatch:
-defaults:
-  run:
-    shell: bash
 jobs:
-  r:
+  base:
     runs-on: ubuntu-latest
     container:
       image: jupyter/minimal-notebook:lab-3.4.5
       options: --user root
-    permissions:
-      contents: write
+    defaults:
+      run:
+        shell: bash
     steps:
-      - uses: actions/checkout@v4
       - name: Remove pinned dependencies from local installation
         run: rm -f "${CONDA_DIR}/conda-meta/pinned"
       - name: Downgrade Python version
         run: mamba install --yes python=3.9
+      - name: List packages
+        run: conda list
       - name: Export frozen conda environment
         run: conda list --explicit --md5 > environments/notebook-base-frozen.yaml
       - name: Upload frozen conda environment as artifact
@@ -33,16 +32,25 @@ jobs:
           path: environments/notebook-base-frozen.yaml
           if-no-files-found: error
           retention-days: 14
+  commit:
+    if: github.ref_name == 'main' && github.repository_owner == 'jdblischak' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs: base
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download frozen conda environment
+        uses: actions/download-artifact@v4
+        with:
+          name: notebook-base-frozen
+          path: environments/
       - name: Configure Git
         run: |
-          # This is a permissions quirk due to running Git as root inside of a Docker container
-          git config --global --add safe.directory $(pwd)
           git config user.name "GitHub Actions"
           git config user.email "runneradmin@users.noreply.github.com"
-          git status
       - name: Push environment files to GitHub
-        #if:
         run: |
           git add environments/
-          git commit -m "Update base conda env for notebook"
+          git commit -m "Update base conda env for notebook" || echo "nothing to commit"
           git push origin main
