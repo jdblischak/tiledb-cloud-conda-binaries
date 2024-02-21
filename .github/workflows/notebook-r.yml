@@ -2,26 +2,23 @@ name: Create conda environment for notebook R kernel
 on:
   push:
     paths:
-      - '.github/workflows/create-conda-envs-notebook-r.yml'
+      - '.github/workflows/notebook-r.yml'
   pull_request:
     paths:
-      - '.github/workflows/create-conda-envs-notebook-r.yml'
+      - '.github/workflows/notebook-r.yml'
   workflow_dispatch:
-defaults:
-  run:
-    shell: bash
 jobs:
   r:
     runs-on: ubuntu-latest
-    container:
-      image: jupyter/minimal-notebook:lab-3.4.5
-      options: --user root
-    permissions:
-      contents: write
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
     steps:
-      - uses: actions/checkout@v4
-      - name: Remove pinned dependencies from local installation
-        run: rm -f "${CONDA_DIR}/conda-meta/pinned"
+      - name: Setup conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Mambaforge
+          use-mamba: true
       - name: Create conda environment
         run: |
           mamba create -y -n r-tiledb -c conda-forge -c tiledb/label/for-cloud -c tiledb \
@@ -64,13 +61,15 @@ jobs:
             r-sever \
             r-config \
             git-lfs
+      - name: List packages
+        run: conda list -n r-tiledb
       - name: Export frozen conda environment
-        run: conda list -n r-tiledb --explicit --md5 > environments/notebook-r-frozen.yaml
+        run: conda list -n r-tiledb --explicit --md5 > notebook-r-frozen.yaml
       - name: Upload frozen conda environment as artifact
         uses: actions/upload-artifact@v4
         with:
           name: notebook-r-frozen
-          path: environments/notebook-r-frozen.yaml
+          path: notebook-r-frozen.yaml
           if-no-files-found: error
           retention-days: 14
       - name: Install dependencies for vcf-geo
@@ -103,23 +102,49 @@ jobs:
             mamba install -y -c bioconda -c tiledb \
               patch \
               r-rcppspdlog
+      - name: List packages (vcf-geo)
+        run: conda list
       - name: Export frozen conda environment (vcf-geo)
-        run: conda list -n r-tiledb --explicit --md5 > environments/notebook-r-vcf-geo-frozen.yaml
+        run: conda list -n r-tiledb --explicit --md5 > notebook-r-vcf-geo-frozen.yaml
       - name: Upload frozen conda environment as artifact (vcf-geo)
         uses: actions/upload-artifact@v4
         with:
           name: notebook-r-vcf-geo-frozen
-          path: environments/notebook-r-vcf-geo-frozen.yaml
+          path: notebook-r-vcf-geo-frozen.yaml
           if-no-files-found: error
           retention-days: 14
-      - name: Configure Git
-        run: |
-          # This is a permissions quirk due to running Git as root inside of a Docker container
-          git config --global --add safe.directory $(pwd)
-          git status
+
+
       - name: Push environment files to GitHub
         #if:
         run: |
           git add environments/
-          git commit -m "Update conda envs for notebook R kernels"
+          git commit -m
+          git push origin main
+  commit:
+    if: github.ref_name == 'main' && github.repository_owner == 'jdblischak' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs: r
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download frozen conda environment
+        uses: actions/download-artifact@v4
+        with:
+          name: notebook-r-frozen
+          path: environments/
+      - name: Download frozen conda environment (vcf-geo)
+        uses: actions/download-artifact@v4
+        with:
+          name: notebook-r-vcf-geo-frozen
+          path: environments/
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "runneradmin@users.noreply.github.com"
+      - name: Push environment files to GitHub
+        run: |
+          git add environments/
+          git commit -m "Update conda envs for notebook R kernels" || echo "nothing to commit"
           git push origin main
