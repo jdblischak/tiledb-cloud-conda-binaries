@@ -30,7 +30,6 @@ jobs:
           use-mamba: true
       - name: Install conda packages
         run: |
-          # mamba clean --yes --all
           mamba install -y -c tiledb/label/for-cloud -c tiledb -c fastai -c pyviz -c bokeh -c conda-forge \
             python==3.9.* \
             cudatoolkit=11.4 \
@@ -100,3 +99,85 @@ jobs:
           path: notebook-python-frozen.yaml
           if-no-files-found: error
           retention-days: 14
+      - name: Install conda packages (vcf-geo)
+        run: |
+          mamba install -y -c bioconda -c tiledb/label/for-cloud -c tiledb -c conda-forge \
+            cmake \
+            patch \
+            cxx-compiler \
+            c-compiler \
+            make \
+            bcftools \
+            pybedtools \
+            anndata \
+            snakemake-minimal \
+            cellxgene-census==1.10.1 \
+            cartopy \
+            datashader \
+            descartes \
+            folium \
+            geos \
+            geotiff \
+            holoviews \
+            laszip \
+            libnetcdf \
+            proj \
+            proj-data \
+            pystac \
+            shapely \
+            scikit-build \
+            zstd-static \
+            swig \
+            ezdxf \
+            trimesh \
+            xesmf \
+            harmonypy \
+            episcanpy \
+            cellrank \
+            gseapy \
+            bioinfokit \
+            numpy==1.23.* \
+            laspy \
+            cvxpy==1.3.2
+
+          mamba install -y -c conda-forge -c tiledb openslide \
+            openslide-python \
+            scvi-tools
+      - name: List packages (vcf-geo)
+        run: conda list
+      - name: Export frozen conda environment (vcf-geo)
+        run: conda list --explicit --md5 > notebook-python-vcf-geo-frozen.yaml
+      - name: Upload frozen conda environment as artifact (vcf-geo)
+        uses: actions/upload-artifact@v4
+        with:
+          name: notebook-python-vcf-geo-frozen
+          path: notebook-python-vcf-geo-frozen.yaml
+          if-no-files-found: error
+          retention-days: 14
+  commit:
+    if: github.ref_name == 'main' && github.repository_owner == 'jdblischak' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs: python
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download frozen conda environment
+        uses: actions/download-artifact@v4
+        with:
+          name: notebook-python-frozen
+          path: environments/
+      - name: Download frozen conda environment (vcf-geo)
+        uses: actions/download-artifact@v4
+        with:
+          name: notebook-python-vcf-geo-frozen
+          path: environments/
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "runneradmin@users.noreply.github.com"
+      - name: Push environment files to GitHub
+        run: |
+          git add environments/
+          git commit -m "Update conda envs for notebook Python kernels" || echo "nothing to commit"
+          git push origin main
