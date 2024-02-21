@@ -3,32 +3,37 @@ on:
   push:
     paths:
       - '.github/workflows/create-conda-envs-notebook-python.yml'
+      - 'environments/notebook-base-frozen.yaml'
   pull_request:
     paths:
       - '.github/workflows/create-conda-envs-notebook-python.yml'
+      - 'environments/notebook-base-frozen.yaml'
   workflow_dispatch:
-defaults:
-  run:
-    shell: bash
 jobs:
   python:
     runs-on: ubuntu-latest
-    container:
-      image: jupyter/minimal-notebook:lab-3.4.5
-      options: --user root
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
     steps:
-      - name: Remove pinned dependencies from local installation
-        run: rm -f "${CONDA_DIR}/conda-meta/pinned"
+      - uses: actions/checkout@v4
+      - name: Install base notebook environment
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-name: base
+          environment-file: environments/notebook-base-frozen.yaml
+          cache-environment: true
+          init-shell: bash
       - name: Configure CUDA
         run: |
           echo CONDA_OVERRIDE_CUDA="11.4" >> $GITHUB_ENV
-          echo XLA_FLAGS="--xla_gpu_cuda_data_dir=/opt/cuda-toolkit" >> $GITHUB_ENV
-          mkdir /opt/cuda-toolkit && chown -R jovyan /opt/cuda-toolkit
-          apt-get update
-          apt-get --yes install libxml2-dev
+          # echo XLA_FLAGS="--xla_gpu_cuda_data_dir=/opt/cuda-toolkit" >> $GITHUB_ENV
+          # mkdir /opt/cuda-toolkit && chown -R jovyan /opt/cuda-toolkit
+          # apt-get update
+          # apt-get --yes install libxml2-dev
       - name: Install conda packages
         run: |
-          mamba clean --yes --all
+          # mamba clean --yes --all
           mamba install -y -c tiledb/label/for-cloud -c tiledb -c fastai -c pyviz -c bokeh -c conda-forge \
             python==3.9.* \
             cudatoolkit=${CONDA_OVERRIDE_CUDA} \
@@ -87,6 +92,8 @@ jobs:
             keras-applications \
             tensorflow==2.11.* \
             'cloudpickle<3'
+      - name: List packages
+        run: conda list
       - name: Export frozen conda environment
         run: conda list --explicit --md5 > notebook-python-frozen.yaml
       - name: Upload frozen conda environment as artifact
