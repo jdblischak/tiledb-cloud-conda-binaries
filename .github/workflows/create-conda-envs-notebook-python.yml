@@ -18,12 +18,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install base notebook environment
-        uses: mamba-org/setup-micromamba@v1
+        uses: conda-incubator/setup-miniconda@v3
         with:
-          environment-name: base
+          miniforge-variant: Mambaforge
           environment-file: environments/notebook-base-frozen.yaml
-          cache-environment: true
-          init-shell: bash
+          activate-environment: notebook
+          use-mamba: true
       - name: Configure CUDA
         run: |
           echo CONDA_OVERRIDE_CUDA="11.4" >> $GITHUB_ENV
