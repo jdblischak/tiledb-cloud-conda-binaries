@@ -17,6 +17,7 @@ jobs:
       image: jupyter/minimal-notebook:lab-3.4.5
       options: --user root
     steps:
+      - uses: actions/checkout@v4
       - name: Remove pinned dependencies from local installation
         run: rm -f "${CONDA_DIR}/conda-meta/pinned"
       - name: Create conda environment
@@ -62,12 +63,12 @@ jobs:
             r-config \
             git-lfs
       - name: Export frozen conda environment
-        run: conda list -n r-tiledb --explicit --md5 > notebook-r-frozen.yaml
+        run: conda list -n r-tiledb --explicit --md5 > environments/notebook-r-frozen.yaml
       - name: Upload frozen conda environment as artifact
         uses: actions/upload-artifact@v4
         with:
           name: notebook-r-frozen
-          path: notebook-r-frozen.yaml
+          path: environments/notebook-r-frozen.yaml
           if-no-files-found: error
           retention-days: 14
       - name: Install dependencies for vcf-geo
@@ -101,11 +102,20 @@ jobs:
               patch \
               r-rcppspdlog
       - name: Export frozen conda environment (vcf-geo)
-        run: conda list -n r-tiledb --explicit --md5 > notebook-r-vcf-geo-frozen.yaml
+        run: conda list -n r-tiledb --explicit --md5 > environments/notebook-r-vcf-geo-frozen.yaml
       - name: Upload frozen conda environment as artifact (vcf-geo)
         uses: actions/upload-artifact@v4
         with:
           name: notebook-r-vcf-geo-frozen
-          path: notebook-r-vcf-geo-frozen.yaml
+          path: environments/notebook-r-vcf-geo-frozen.yaml
           if-no-files-found: error
           retention-days: 14
+      - name: Push environment files to GitHub
+        permissions:
+          content: write
+        #if:
+        run: |
+          git status
+          git add environments/
+          git commit -m "Update conda envs for notebook R kernels"
+          git push origin main
