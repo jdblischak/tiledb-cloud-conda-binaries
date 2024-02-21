@@ -113,14 +113,6 @@ jobs:
           path: notebook-r-vcf-geo-frozen.yaml
           if-no-files-found: error
           retention-days: 14
-
-
-      - name: Push environment files to GitHub
-        #if:
-        run: |
-          git add environments/
-          git commit -m
-          git push origin main
   commit:
     if: github.ref_name == 'main' && github.repository_owner == 'jdblischak' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
