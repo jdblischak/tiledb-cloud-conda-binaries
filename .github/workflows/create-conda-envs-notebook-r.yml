@@ -16,6 +16,8 @@ jobs:
     container:
       image: jupyter/minimal-notebook:lab-3.4.5
       options: --user root
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Remove pinned dependencies from local installation
@@ -111,8 +113,6 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: Push environment files to GitHub
-        permissions:
-          content: write
         #if:
         run: |
           git status
