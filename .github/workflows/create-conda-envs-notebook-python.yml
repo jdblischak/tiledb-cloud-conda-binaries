@@ -17,6 +17,8 @@ jobs:
         shell: bash -leo pipefail {0}
     steps:
       - uses: actions/checkout@v4
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
       - name: Install base notebook environment
         uses: conda-incubator/setup-miniconda@v3
         with:
