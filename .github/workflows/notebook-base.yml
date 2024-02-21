@@ -53,4 +53,5 @@ jobs:
         run: |
           git add environments/
           git commit -m "Update base conda env for notebook" || echo "nothing to commit"
+          git pull --rebase origin main
           git push origin main

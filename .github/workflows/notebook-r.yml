@@ -139,4 +139,5 @@ jobs:
         run: |
           git add environments/
           git commit -m "Update conda envs for notebook R kernels" || echo "nothing to commit"
+          git pull --rebase origin main
           git push origin main
