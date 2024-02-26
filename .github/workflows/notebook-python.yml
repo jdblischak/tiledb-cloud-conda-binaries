@@ -30,7 +30,7 @@ jobs:
           use-mamba: true
       - name: Install conda packages
         run: |
-          mamba install -y -c tiledb/label/for-cloud -c tiledb -c fastai -c pyviz -c bokeh -c conda-forge \
+          mamba install -y -c conda-forge -c tiledb/label/for-cloud -c tiledb -c fastai -c pyviz -c bokeh  \
             python==3.9.* \
             cudatoolkit=11.4 \
             cudatoolkit-dev==11.4 \
@@ -101,7 +101,7 @@ jobs:
           retention-days: 14
       - name: Install conda packages (vcf-geo)
         run: |
-          mamba install -y -c bioconda -c tiledb/label/for-cloud -c tiledb -c conda-forge \
+          mamba install -y -c conda-forge -c bioconda -c tiledb/label/for-cloud -c tiledb  \
             cmake \
             patch \
             cxx-compiler \
